@@ -60,9 +60,9 @@ function AudioMenu() {
             <box orientation={Gtk.Orientation.VERTICAL} spacing={4} class="graph-container">
                 <label label={track} class="stats-text" halign={Gtk.Align.CENTER} />
                 <box spacing={20} halign={Gtk.Align.CENTER} class="media-controls">
-                    <button onClicked={() => execAsync("playerctl previous").catch(print)} class="media-btn"><label label="󰒮" /></button>
-                    <button onClicked={() => execAsync("playerctl play-pause").catch(print)} class="media-btn play-btn"><label label="󰐊" /></button>
-                    <button onClicked={() => execAsync("playerctl next").catch(print)} class="media-btn"><label label="󰒭" /></button>
+                    <button onClicked={() => execAsync("bash -c 'playerctl previous'").catch(print)} class="media-btn"><label label="󰒮" /></button>
+                    <button onClicked={() => execAsync("bash -c 'playerctl play-pause'").catch(print)} class="media-btn play-btn"><label label="󰐊" /></button>
+                    <button onClicked={() => execAsync("bash -c 'playerctl next'").catch(print)} class="media-btn"><label label="󰒭" /></button>
                 </box>
             </box>
             <box class="separator" />

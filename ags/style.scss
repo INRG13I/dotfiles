@@ -1,6 +1,6 @@
 $bg: transparent;
-$fg: #ffffff; /* Pure white default text */
-$pill_bg: #313244; /* Your sleek dark gray */
+$fg: #ebdbb2; /* Gruvbox warm white text */
+$pill_bg: #282828; /* Gruvbox dark background for the bar */
 
 * {
     font-family: "JetBrainsMono Nerd Font", "Inter", sans-serif;
@@ -160,12 +160,11 @@ calendar {
 
 
 .active-btn {
-    background: #89b4fa; /* Bright Catppuccin Blue */
-    color: #1e1e2e;      /* Dark text for contrast */
+    background: #fabd2f; /* Gruvbox Yellow */
+    color: #282828;      /* Dark text */
     border: none;
 }
 
 .active-btn:hover {
-    background: #b4befe; /* Slightly lighter blue on hover */
-    color: #1e1e2e;
+    background: #fe8019; /* Gruvbox Orange on hover */
 }

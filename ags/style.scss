@@ -1,0 +1,171 @@
+$bg: transparent;
+$fg: #ffffff; /* Pure white default text */
+$pill_bg: #313244; /* Your sleek dark gray */
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "Inter", sans-serif;
+    font-weight: bold;
+}
+
+/* ==========================================
+   1. MAIN BAR & FLOATING PILLS
+   ========================================== */
+.Bar {
+    background-color: $bg;
+    color: $fg;
+}
+
+.module-btn {
+    background: $pill_bg;
+    color: #ffffff;
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin: 4px 0;
+    border: none;
+    box-shadow: none;
+}
+
+.module-btn:hover {
+    background-color: #45475a; 
+}
+
+/* Strip the sneaky white background from inside GTK menubuttons */
+menubutton.module-btn > button {
+    background: transparent; 
+    color: #ffffff;          
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    min-height: 0;
+}
+
+menubutton.module-btn > button:hover {
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Workspace specific padding */
+.workspace-box {
+    padding: 2px 12px;
+    label {
+        font-family: "JetBrainsMono Nerd Font", monospace;
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+}
+
+/* ==========================================
+   2. POPOVERS & DROPDOWN MENUS
+   ========================================== */
+/* Force all GTK popovers to use the dark gray and white text */
+popover > contents {
+    background-color: $pill_bg; 
+    color: #ffffff;             
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+/* Target the Calendar explicitly to remove the default white background */
+calendar {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+/* The container for our custom menus */
+.system-menu {
+    padding: 16px;
+    min-width: 250px;
+    background-color: transparent; 
+}
+
+/* Text and elements inside menus */
+.stats-text {
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #ffffff;
+}
+
+.public-ip { 
+    font-size: 11px; 
+    color: #ffffff; 
+}
+
+.separator { 
+    min-height: 1px; 
+    background: rgba(255, 255, 255, 0.1); 
+    margin: 8px 0; 
+}
+
+/* Buttons inside menus */
+.media-btn {
+    background: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none; 
+    font-size: 24px; 
+    color: #ffffff; 
+    &:hover { color: #89b4fa; } /* Slight blue hover for media controls */
+}
+
+.play-btn { 
+    font-size: 32px; 
+    color: #ffffff; 
+}
+
+.pavu-btn {
+    background-image: none;
+    background-color: $pill_bg; 
+    color: #ffffff;             
+    padding: 6px; 
+    border-radius: 6px; 
+    margin-top: 10px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    box-shadow: none;
+}
+
+.pavu-btn:hover { 
+    background-color: #45475a; 
+}
+
+
+/* ==========================================
+   3. ANIMATIONS & DYNAMIC COLORS
+   ========================================== */
+
+/* Fan Animation */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animated-fan {
+    animation: spin 2s linear infinite;
+    
+    /* THE MAGIC NUMBERS */
+    /* 53% is center left-to-right. 51% moves the pivot slightly DOWN to counter the font baseline. */
+    transform-origin: 53% 51%; 
+    
+    min-width: 16px;
+    min-height: 16px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Battery Dynamic Colors (Triggered by Bar.tsx logic) */
+.text-green { color: #a6e3a1; font-weight: bold; }
+.text-red   { color: #f38ba8; font-weight: bold; }
+.text-white { color: #ffffff; font-weight: bold; }
+
+
+.active-btn {
+    background: #89b4fa; /* Bright Catppuccin Blue */
+    color: #1e1e2e;      /* Dark text for contrast */
+    border: none;
+}
+
+.active-btn:hover {
+    background: #b4befe; /* Slightly lighter blue on hover */
+    color: #1e1e2e;
+}

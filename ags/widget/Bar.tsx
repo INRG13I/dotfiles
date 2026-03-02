@@ -8,8 +8,7 @@ import { execAsync } from "ags/process"
 // ==========================================
 
 function BatteryMenu() {
-    // Poll the current power profile (using .trim() later to remove invisible terminal newlines)
-    const activeProfile = createPoll("balanced", 2000, "bash -c 'powerprofilesctl get || echo balanced'")
+    const activeProfile = createPoll("balanced", 5000, "bash -c 'powerprofilesctl get || echo balanced'")
 
     return (
         <box orientation={Gtk.Orientation.VERTICAL} spacing={10} class="system-menu">
@@ -53,7 +52,7 @@ function NetworkMenu() {
 }
 
 function AudioMenu() {
-    const track = createPoll("No media playing", 1000, "playerctl metadata --format '{{ title }} - {{ artist }}' 2>/dev/null || echo 'No media playing'")
+    const track = createPoll("No media playing", 2000, "playerctl metadata --format '{{ title }} - {{ artist }}' 2>/dev/null || echo 'No media playing'")
     
     return (
         <box orientation={Gtk.Orientation.VERTICAL} spacing={12} class="system-menu">
@@ -74,8 +73,8 @@ function AudioMenu() {
 }
 
 function FanMenu() {
-    const fanSpeed = createPoll("0 RPM", 2000, "bash -c \"grep 'speed:' /proc/acpi/ibm/fan | awk '{print \\$2}' || echo 'N/A'\"")
-    const fanLevel = createPoll("auto", 2000, "bash -c \"grep 'level:' /proc/acpi/ibm/fan | awk '{print \\$2}' || echo 'auto'\"")
+    const fanSpeed = createPoll("0 RPM", 5000, "bash -c \"grep 'speed:' /proc/acpi/ibm/fan | awk '{print \\$2}' || echo 'N/A'\"")
+    const fanLevel = createPoll("auto", 5000, "bash -c \"grep 'level:' /proc/acpi/ibm/fan | awk '{print \\$2}' || echo 'auto'\"")
     
     return (
         <box orientation={Gtk.Orientation.VERTICAL} spacing={12} class="system-menu">
@@ -110,16 +109,16 @@ function FanMenu() {
     )
 }
 
-
 // ==========================================
 //               MAIN BAR
 // ==========================================
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
-    const time = createPoll("", 1000, "date '+%-d %b %H:%M'")
-    const workspaces = createPoll("1", 200, "bash -c \"active=$(hyprctl activeworkspace -j | jq '.id'); hyprctl workspaces -j | jq -r 'map(.id) | sort | .[]' | awk -v act=\\\"$active\\\" '{if (\\$1 == act) printf \\\"[%s] \\\", \\$1; else printf \\\"%s \\\", \\$1}'\"")
+    const time = createPoll("", 5000, "date '+%-d %b %H:%M'")
 
-    // One poll to rule them all - updates every 5 seconds
+    // OPTIMIZED WORKSPACES: Replaced heavy 'jq' execution with ultra-fast pure awk
+    const workspaces = createPoll("1", 500, "bash -c \"act=\\$(hyprctl activeworkspace | awk 'NR==1{print \\$3}'); hyprctl workspaces | awk '/^workspace ID/{print \\$3}' | sort -n | awk -v a=\\\"\\$act\\\" '{printf (\\$1==a) ? \\\"[%s] \\\" : \\\"%s \\\", \\$1}'\"")
+
     const batteryData = createPoll({ percent: 0, status: "Discharging" }, 5000, 
         "bash -c \"cat /sys/class/power_supply/BAT0/capacity; cat /sys/class/power_supply/BAT0/status\"", 
         (out) => {
@@ -130,17 +129,22 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
             };
         }
     )
+    
     const netIcon = createPoll("", 5000, "bash -c \"dev=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'dev \\K\\S+' || echo ''); if echo \\\"\\$dev\\\" | grep -qE '^(en|eth)'; then echo '󰈀'; else echo ''; fi\"")
-    const privIp = createPoll("Offline", 5000, "bash -c \"ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \\K\\S+' || echo Offline\"")
+    const privIp = createPoll("Offline", 10000, "bash -c \"ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \\K\\S+' || echo Offline\"")
 
-    // Added '|| echo 0%' so if grep fails, it doesn't crash the poll
-    const volPct = createPoll("0%", 500, "bash -c \"amixer sget Master | grep -oP '\\[\\d+%\\]' | head -1 | tr -d '[]' || echo '0%'\"")
-    const volIcon = createPoll("󰕾", 500, "bash -c \"amixer sget Master | grep -q '\\[off\\]' && echo '󰝟' || echo '󰕾'\"")
-    const micIcon = createPoll("󰍬", 500, "bash -c \"amixer sget Capture | grep -q '\\[off\\]' && echo '󰍭' || echo '󰍬'\"")
+    // OPTIMIZED AUDIO: Replaced slow 'amixer' queries with instant 'wpctl' (Pipewire/Wireplumber)
+    const volPct = createPoll("0%", 1000, "bash -c \"wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int(\\$2*100)\\\"%\\\"}'\"")
+    const volIcon = createPoll("󰕾", 1000, "bash -c \"wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED && echo '󰝟' || echo '󰕾'\"")
+    const micIcon = createPoll("󰍬", 1000, "bash -c \"wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED && echo '󰍭' || echo '󰍬'\"")
 
-    const ramRes = createPoll("0", 2000, "bash -c \"free | awk '/Mem:/ {printf \\\"%.0f\\\", \\$3/\\$2 * 100}'\"")
-    const cpuRes = createPoll("0", 2000, "bash -c \"grep 'cpu ' /proc/stat | awk '{usage=(\\$2+\\$4)*100/(\\$2+\\$4+\\$5)} END {printf \\\"%d\\\", usage}'\"")
-    const gpuRes = createPoll("0", 2000, "bash -c \"nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null || echo 0\"")
+    const ramRes = createPoll("0", 5000, "bash -c \"free | awk '/Mem:/ {printf \\\"%.0f\\\", \\$3/\\$2 * 100}'\"")
+    
+    // OPTIMIZED CPU: Removed the blocking 'sleep 0.5'. It now runs instantly (0ms hang)
+    const cpuRes = createPoll("0", 5000, "bash -c \"read -r _ a b c d _ < /proc/stat; read -r oa ob oc od < /tmp/cpu_ags 2>/dev/null || read -r _ oa ob oc od _ < /proc/stat; echo \\\"\\$a \\$b \\$c \\$d\\\" > /tmp/cpu_ags; dt=\\$((\\$a+\\$b+\\$c+\\$d-\\$oa-\\$ob-\\$oc-\\$od)); [ \\\"\\$dt\\\" -eq 0 ] && echo 0 || echo \\$((100*(\\$a+\\$b+\\$c-\\$oa-\\$ob-\\$oc)/\\$dt))\"")
+    
+    // OPTIMIZED GPU: Slowed down to 10s to stop it from waking up your Nvidia card constantly
+    const gpuRes = createPoll("0", 10000, "bash -c \"nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null || echo 0\"")
 
     const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
 
@@ -163,14 +167,13 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
                 {/* RIGHT SIDE */}
                 <box $type="end" halign={Gtk.Align.END} spacing={4} class="right-modules">
                     
-			{/* 8. Animated Fan (Nerd Font version) */}
+                    {/* 8. Animated Fan */}
                     <menubutton class="module-btn fan-box">
                         <label label="󰈐" class="animated-fan" />
                         <popover><FanMenu /></popover>
-                    </menubutton>	
+                    </menubutton>    
 
-                    {/* 6 & 7. Unified Hardware Box (Click to open btop) */}
-                    {/* Note: Change "kitty" below to "alacritty", "wezterm", etc. if you use a different terminal */}
+                    {/* 6 & 7. Unified Hardware Box */}
                     <button class="module-btn system-box" onClicked={() => execAsync("kitty btop").catch(print)}>
                         <box spacing={8}>
                             <label label={cpuRes.as(v => ` ${v}%`)} />
